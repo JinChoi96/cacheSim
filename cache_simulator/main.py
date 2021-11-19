@@ -38,7 +38,7 @@ def initialize_task(mm):
             "miss_penalty" : param.miss_penalty,
             "base"      : param.base,
             "interfere" : param.interfere,
-            "access_pattern"  : param.access_pattern
+            "seq_acc_ratio"  : param.seq_acc_ratio[i]
         }
         task_set.append(Task(**task_param))
         #print(task_set[i])
@@ -69,9 +69,6 @@ if __name__ == "__main__":
 
     for iter in range(param.iteration):  
         # initialize
-        page_table = None
-        cache = None
-        mm = None
         page_table, cache, mm = initialize_mm(param)
         task_set = initialize_task(mm)
 

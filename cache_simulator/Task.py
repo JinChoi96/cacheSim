@@ -27,13 +27,14 @@ class Task:
         self.base = kwargs.get('base', [])
         self.interfere = kwargs.get('interfere', [])
 
-        self.access_pattern = kwargs.get('access_pattern', '')
+        self.seq_acc_ratio = kwargs.get('seq_acc_ratio', 0)
         self.access_idx = 0
 
         self.allocate_vas()
         
         self.execution_pattern_type = kwargs.get('execution_pattern_type', '')
         self.execution_pattern = self.generate_pattern()
+        self.access_pattern = self.generate_access_pattern(self.seq_acc_ratio)
 
         # miss count
         self.cold_miss = 0
@@ -138,16 +139,30 @@ class Task:
             self.count_miss(miss_type)
             return self.hit_time + self.miss_penalty
 
+    def generate_access_pattern(self, seq_access_ratio):
+        access_idx = []
+        seq_idx = 0
+        seq_cnt = int(seq_access_ratio * 10) # assume seq_access_ratio is 0.x 
+        rand_cnt = len(self.base) - seq_cnt
+        # bug
+        #rand_cnt = int((1 - seq_access_ratio) * 10)
+        iterations = int(len(self.execution_pattern) / len(self.base))
+        for i in range(iterations):
+            for s in range(seq_cnt):
+                access_idx.append(seq_idx)
+                seq_idx = (seq_idx + 1) % self.data_size
+            for r in range(rand_cnt):
+                rand_idx = randint(0, self.data_size-1)
+                access_idx.append(rand_idx)
+        return access_idx
+
     def execute(self, tick):
         assert tick < self.ticks
         pat = self.execution_pattern[tick]
         if pat == 'r':
-            if self.access_pattern == 'rand':
-                self.access_idx = randint(0, self.data_size-1)
-            else:
-                self.access_idx = (self.access_idx + 1) % self.data_size
-
-            self.execution_time += self.read(self.access_idx)
+            acc_idx = self.access_pattern[self.access_idx]
+            self.access_idx += 1
+            self.execution_time += self.read(acc_idx)
             return 
         elif pat == 'x':
             # do nothing

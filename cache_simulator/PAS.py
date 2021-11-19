@@ -12,14 +12,16 @@ class PAS:
         self.line_size = kwargs.get('line_size', 1)
         self.cache_capacity = kwargs.get('cache_capacity', 1)
         self.ways = kwargs.get('cache_ways', 1)
-        self.ipa_capacity = kwargs.get('ipa_capacity', 1)
-        
+        self.pa_capacity = kwargs.get('pa_capacity', 1)
+        self.stage_2_translate_offset = kwargs.get('stage_2_translate_offset', 0)
+
         self.cache_sets = int(self.cache_capacity / (self.ways * self.line_size))
-        self.ipa_lines = int(self.ipa_capacity / self.line_size)
+        assert self.stage_2_translate_offset < self.pa_capacity
+        self.ipa_lines = int(self.pa_capacity / self.line_size)
         
         self.sets_per_color = int(self.cache_sets / self.colors)
         if type == 'page table':
-            self.size_per_color = int(self.ipa_capacity / self.colors)
+            self.size_per_color = int(self.pa_capacity / self.colors)
         else:
             self.size_per_color = int(self.cache_capacity / self.colors)
 
@@ -41,10 +43,25 @@ class PAS:
 
     def _set_to_color(self):
         map = []
-        for c in range(self.colors):
-            for s in range(int(self.cache_sets / self.colors)):
-                map.append(c)
+        # TODO: change set<->color mapping accordin to bit mask 
+
+        
+        # interleaving color to sets 
+        c = 0
+        for s in range(self.cache_sets):
+            map.append(c)
+            c = (c+1)%self.colors
+
+#        for c in range(self.colors):
+#            for s in range(int(self.cache_sets / self.colors)):
+#                map.append(c)
         return map 
+
+    def mock_show_lists(self, lists):
+        print(dash + "[PAS: init_free_lists()] show lists" + dash)
+        for i in range(len(lists)):
+            print(lists[i])
+        print(dash + dash)
 
     def init_free_lists(self):
         # init free lists according to its type
@@ -77,15 +94,20 @@ class PAS:
                 color = self.set_to_color[set]
                 lists[data_idx].set_color(color)
 
+            if self.name == "IPA":
+                for c in range(self.colors):
+                    self.free_lists.append([])
 
-            for c in range(self.colors):
-                self.free_lists.append([])
+                for d in range(len(lists)):
+                    color = lists[d].get_color()
+                    self.free_lists[color].append(lists[d])
+                    #print(lists[d])
+                
+                #self.mock_show_lists(lists)
+            elif self.name == "PA":
+                self.free_lists = lists
 
-            for d in range(len(lists)):
-                color = lists[d].get_color()
-                self.free_lists[color].append(lists[d])
-                #print(lists[d])
-
+            #self.show_free_lists()
 
         if self.type == 'cache':
             # Sets X Ways matrix
@@ -95,14 +117,19 @@ class PAS:
                 for w in range(self.ways):
                     self.free_lists[s].append(addr)
 
-        #self.show_free_lists()
         return
 
     def show_free_lists(self):
         if self.type == 'page table':
             print(dash + 'Page table free list' + dash)
-            for c in range(self.colors):
-                print('color %d => %d lines (%d sets)'%(c, len(self.free_lists[c]) / self.line_size, self.sets_per_color))
+            if self.name == "PA":
+                print("%d lines"%(len(self.free_lists)))
+            if self.name == "IPA":
+                for c in range(self.colors):
+                    #print('[color %d] => '%(c))
+                    #for a in self.free_lists[c]:
+                    #    print(a)
+                    print('color %d => %d lines (%d sets)'%(c, len(self.free_lists[c]) / self.line_size, self.sets_per_color))
             print(dash+dash)
 
         if self.type == 'cache':
@@ -131,18 +158,26 @@ class PAS:
         self.global_pas_offset += self.size_per_color
         return
 
-    def get_free_frame(self, task):
-        # get a frame for each task
+    def get_free_frame(self, task, ipas):
         frame = []
-        color = task.get_color()
-        #print(len(self.free_lists[color]))
-        for d in range(task.get_data_size()):
-            addr = self.free_lists[color].pop(0)
-            addr.set_id(task.get_id())
-            addr.set_data_idx(d)
-            # print(addr)
-            frame.append(addr)
-            
+        if ipas == None:
+            # get a frame for each task
+            color = task.get_color()
+            #print(len(self.free_lists[color]))
+            for d in range(task.get_data_size()):
+                addr = self.free_lists[color].pop(0)
+                addr.set_id(task.get_id())
+                addr.set_data_idx(d)
+                # print(addr)
+                frame.append(addr)
+
+        elif ipas:
+            for addr in ipas:
+                set = addr.get_set_idx()
+                new_set = (set + self.stage_2_translate_offset) % self.cache_sets
+                color = self.set_to_color[new_set]
+                new_addr = Addr(addr.get_task_id(), color, new_set, addr.get_line_idx(), addr.get_data_idx())
+                frame.append(new_addr)
         return frame
 
     def replace(self, pa, way_idx):

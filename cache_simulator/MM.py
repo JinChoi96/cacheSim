@@ -4,8 +4,9 @@ class MM:
     hit_cnt = 0
     miss_cnt = 0
 
-    def __init__(self, page_table, cache):
+    def __init__(self, page_table, stage_2_page_table, cache):
         self.page_table = page_table
+        self.stage_2_page_table = stage_2_page_table
         self.cache = cache
 
 
@@ -57,6 +58,9 @@ class MM:
 
     def get_page_table(self):
         return self.page_table
+
+    def get_stage_2_page_table(self):
+        return self.stage_2_page_table
 
     def get_cache(self):
         return self.cache

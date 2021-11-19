@@ -10,10 +10,11 @@ class Task:
     def __init__(self, **kwargs):
         Task.task_num += 1
         
+        self.ipas = []
         self.pas = []
         self.mm = kwargs.get('mm', '')
 
-        self.execution_time = 0
+        self.execution_time = 0.0
         self.ticks = kwargs.get('ticks', 0)
 
         self.id = kwargs.get('id', -1)
@@ -27,10 +28,10 @@ class Task:
         self.base = kwargs.get('base', [])
         self.interfere = kwargs.get('interfere', [])
 
+        self.translate_level = kwargs.get('translate_level', 1)
+
         self.seq_acc_ratio = kwargs.get('seq_acc_ratio', 0)
         self.access_idx = 0
-
-        self.allocate_vas()
         
         self.execution_pattern_type = kwargs.get('execution_pattern_type', '')
         self.execution_pattern = self.generate_pattern()
@@ -42,6 +43,13 @@ class Task:
         self.intra_task_miss = 0
         self.miss_other = 0
         self.hit = 0
+
+        # allocate va and pa
+        self.allocate_vas()
+        self.allocate_pas(1)
+        if self.translate_level == 2:
+            self.allocate_pas(2)
+        #self.show_pas()
 
 
     def terminate():
@@ -61,11 +69,19 @@ class Task:
         return
 
     def show_pas(self):
-        print(dash + "PA of Task %d" %(self.id) + dash)
-        for i in range(len(self.pas)):
-            print("[VA] : %d "%(self.vas[0]+i) + " => [PA] " + str(self.pas[i]))
-        print(dash + dash)
-    
+        if self.translate_level == 1:
+            print(dash + "IPA of Task %d" %(self.id) + dash)
+            for i in range(len(self.ipas)):
+                print("[VA] : %d "%(self.vas[0]+i) + " => [IPA] " + str(self.ipas[i]))
+            print(dash + dash)
+        elif self.translate_level == 2:
+            print(dash + "PA of Task %d" %(self.id) + dash)
+            for i in range(len(self.pas)):
+                print("  [IPA] : %s "%(self.ipas[i]))
+                print("=> [PA] : " + str(self.pas[i]))
+            print(dash + dash)
+
+
     def __str__(self):
         return "[Task] id : %-5s core: %-5s data size: %-5s color: %-5s vas: %-10s type: %s" \
             % (self.id, self.cpu_core, self.data_size, self.color, self.vas, self.execution_pattern_type)
@@ -83,20 +99,17 @@ class Task:
     def get_size(self):
         return Task.global_vas[len(Task.global_vas)-1][0][1]
 
-    def set_pas(self):
-        frame = self.mm.get_page_table().get_free_frame(self)
-        self.pas = frame
-        return
-
-    # 
     def allocate_vas(self):
         self.vas = [Task.global_vas_offset, Task.global_vas_offset + self.data_size]
         Task.global_vas.append([self.vas, self.color]) # [start, end-1]
         Task.global_vas_offset += self.data_size
         return
 
-    def insert_to_pas(self, addr):
-        self.pas.append(addr)
+    def allocate_pas(self, level):
+        self.ipas = self.mm.get_page_table().get_free_frame(self, None)
+        if level == 2:
+            self.pas = self.mm.get_stage_2_page_table().get_free_frame(self, self.ipas)
+        return
 
     def generate_pattern(self):
         unit = self.base if self.execution_pattern_type == 'b' else self.interfere
@@ -105,6 +118,9 @@ class Task:
         for _ in range(int(self.ticks / len(unit))):
             pattern += unit
         return pattern
+
+    def va_to_ipa(self, offset):
+        return self.ipas[offset]
 
     def va_to_pa(self, offset):
         return self.pas[offset]
@@ -125,9 +141,11 @@ class Task:
 
     def read(self, idx):
         # change to reference value
-
         offset = idx
-        pa = self.va_to_pa(offset) # pa : Addr
+        if self.translate_level == 1:
+            pa = self.va_to_ipa(offset) # pa : Addr
+        elif self.translate_level == 2:
+            pa = self.va_to_pa(offset)
         # print("[Task: read()] va : %-5s <-> pa: %s" %(str(self.vas[0] + offset), pa))
         
         if self.mm.lookup_cache(pa):

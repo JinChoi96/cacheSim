@@ -13,12 +13,14 @@ def initialize_mm(param):
     page_table = PAS(**param.page_param)
     #page_table.show_global_pas()
 
+    stage_2_page_table = PAS(**param.stage_2_page_table)
+
     cache = PAS(**param.cache_param)
     #cache.show_global_pas()
 
-    mm = MM(page_table, cache)
+    mm = MM(page_table, stage_2_page_table, cache)
 
-    return page_table, cache, mm
+    return page_table, stage_2_page_table, cache, mm
 
 def initialize_task(mm):
     # initialize tasks
@@ -38,23 +40,17 @@ def initialize_task(mm):
             "miss_penalty" : param.miss_penalty,
             "base"      : param.base,
             "interfere" : param.interfere,
-            "seq_acc_ratio"  : param.seq_acc_ratio[i]
+            "seq_acc_ratio"  : param.seq_acc_ratio[i],
+            "translate_level" : param.translate_level
         }
         task_set.append(Task(**task_param))
         #print(task_set[i])
     #print(dash+dash)
 
     # As for now, no swapping
-    assert param.ipa_capacity >= task_set[0].get_size()
+    assert param.pa_capacity >= task_set[0].get_size()
 
     #task_set[0].show_global_vas()
-
-
-    # get a frame for each task
-    for task in task_set:
-        task.set_pas()
-        #task.show_pas()
-    #page_table.show_free_lists()
 
     return task_set
 
@@ -69,7 +65,7 @@ if __name__ == "__main__":
 
     for iter in range(param.iteration):  
         # initialize
-        page_table, cache, mm = initialize_mm(param)
+        page_table, stage_2_page_table, cache, mm = initialize_mm(param)
         task_set = initialize_task(mm)
 
         # execute tasks as their access pattern for amount of ticks 
@@ -85,8 +81,14 @@ if __name__ == "__main__":
 
     print(dash + "Execution time (%d iters)"%(param.iteration) + dash)
     for t in range(len(task_set)):
-        print('[task %d (%s)] Execution time average : %d stdev: %d'%\
-            (t, task_set[t].execution_pattern_type, statistics.mean(executions[t]), statistics.stdev(executions[t])))
+        if param.iteration == 1:
+            _mean = executions[t][0]
+            _stdev = 0
+        else:
+            _mean = statistics.mean(executions[t])
+            _stdev = statistics.stdev(executions[t])
+        print('[task %d (%s)] Execution time average : %f min: %f max: %f stdev: %f'%\
+            (t, task_set[t].execution_pattern_type, _mean, min(executions[t]), max(executions[t]), _stdev))
     print(dash + dash)
 
     print(dash + "Miss counts" + dash)

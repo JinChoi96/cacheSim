@@ -9,6 +9,9 @@ class PAS:
         self.name = kwargs.get('name', '')
         self.type = kwargs.get('type', '')
         self.colors = kwargs.get('colors', 1)
+        # self.color_mask = kwargs.get('color_mask', '')
+        self.color_mask = '110'
+        assert self.colors == pow(2,(self.color_mask.count('1')))
         self.line_size = kwargs.get('line_size', 1)
         self.cache_capacity = kwargs.get('cache_capacity', 1)
         self.ways = kwargs.get('cache_ways', 1)
@@ -18,7 +21,10 @@ class PAS:
         self.cache_sets = int(self.cache_capacity / (self.ways * self.line_size))
         assert self.stage_2_translate_offset < self.pa_capacity
         self.ipa_lines = int(self.pa_capacity / self.line_size)
-        
+
+        assert self.cache_sets == pow(2, len(self.color_mask)),\
+            'cache sets %d should be the same with 2^%d'%(self.cache_sets, len(self.color_mask))
+
         self.sets_per_color = int(self.cache_sets / self.colors)
         if type == 'page table':
             self.size_per_color = int(self.pa_capacity / self.colors)
@@ -28,6 +34,7 @@ class PAS:
         self.free_lists = []
 
         self.set_to_color = self._set_to_color()
+
 
 #        print('[PAS %s] cache sets : %d, ipa lines: %d, sets per color : %d, size per color: %d' %
 #            (self.type, self.cache_sets, self.ipa_lines, self.sets_per_color, self.size_per_color))
@@ -42,20 +49,12 @@ class PAS:
         return self.ways
 
     def _set_to_color(self):
-        map = []
-        # TODO: change set<->color mapping accordin to bit mask 
+        bit_len = get_bit_len(self.cache_sets)
+        bitmap = build_bitmap(bit_len)
 
-        
-        # interleaving color to sets 
-        c = 0
-        for s in range(self.cache_sets):
-            map.append(c)
-            c = (c+1)%self.colors
+        map = map_set_to_color(self.color_mask, bitmap)
+        return map
 
-#        for c in range(self.colors):
-#            for s in range(int(self.cache_sets / self.colors)):
-#                map.append(c)
-        return map 
 
     def mock_show_lists(self, lists):
         print(dash + "[PAS: init_free_lists()] show lists" + dash)

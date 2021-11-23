@@ -55,46 +55,55 @@ def initialize_task(mm):
     return task_set
 
 if __name__ == "__main__":
-    param = Param()
-    executions = []
-    misses = []
+    params = []
+    # Case 1
+    params.append(Param(sole = True, name = 'Sole'))
+    params.append(Param(partitioning = False, name = 'Baseline'))
+    params.append(Param(partitioning = True, name = "partitioning"))
+    params.append(Param(partitioning = True, translate_level = 2, name = "stage-2 translation"))    
 
-    for i in range(len(param.execution_pattern_type)):
-        executions.append([])
-        misses.append([])
+    for i in range(len(params)):
+        param = params[i]
+        param.show_params_list()
+        executions = []
+        misses = []
 
-    for iter in range(param.iteration):  
-        # initialize
-        page_table, stage_2_page_table, cache, mm = initialize_mm(param)
-        task_set = initialize_task(mm)
+        for i in range(len(param.execution_pattern_type)):
+            executions.append([])
+            misses.append([])
 
-        # execute tasks as their access pattern for amount of ticks 
-        for tick in range(param.ticks):
-            for task in task_set:
-                task.execute(tick)
-        # termination
-        Task.terminate()
+        for iter in range(param.iteration):  
+            # initialize
+            page_table, stage_2_page_table, cache, mm = initialize_mm(param)
+            task_set = initialize_task(mm)
 
+            # execute tasks as their access pattern for amount of ticks 
+            for tick in range(param.ticks):
+                for task in task_set:
+                    task.execute(tick)
+            # termination
+            Task.terminate()
+
+            for t in range(len(task_set)):
+                executions[t].append(task_set[t].execution_time)
+                misses[t].append(task_set[t].get_total_miss())
+
+        print(dash + "Execution time (%d iters)"%(param.iteration) + dash)
         for t in range(len(task_set)):
-            executions[t].append(task_set[t].execution_time)
-            misses[t].append(task_set[t].get_total_miss())
+            if param.iteration == 1:
+                _mean = executions[t][0]
+                _stdev = 0
+            else:
+                _mean = statistics.mean(executions[t])
+                _stdev = statistics.stdev(executions[t])
+            print('[task %d (%s)] Execution time average : %f min: %f max: %f stdev: %f'%\
+                (t, task_set[t].execution_pattern_type, _mean, min(executions[t]), max(executions[t]), _stdev))
+        print(dash + dash)
 
-    print(dash + "Execution time (%d iters)"%(param.iteration) + dash)
-    for t in range(len(task_set)):
-        if param.iteration == 1:
-            _mean = executions[t][0]
-            _stdev = 0
-        else:
-            _mean = statistics.mean(executions[t])
-            _stdev = statistics.stdev(executions[t])
-        print('[task %d (%s)] Execution time average : %f min: %f max: %f stdev: %f'%\
-            (t, task_set[t].execution_pattern_type, _mean, min(executions[t]), max(executions[t]), _stdev))
-    print(dash + dash)
-
-    print(dash + "Miss counts" + dash)
-    print("ave access: %d, hit: %d, miss: %d"%(mm.get_access_cnt()/param.iteration, mm.get_hit_cnt()/param.iteration, mm.get_miss_cnt()/param.iteration))
-    for t in task_set:
-        t.show_cache_count()
-    print(dash + dash)
+        print(dash + "Miss counts" + dash)
+        print("ave access: %d, hit: %d, miss: %d"%(mm.get_access_cnt()/param.iteration, mm.get_hit_cnt()/param.iteration, mm.get_miss_cnt()/param.iteration))
+        for t in task_set:
+            t.show_cache_count()
+        print(dash + dash)
 
     

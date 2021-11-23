@@ -12,8 +12,9 @@ class PAS:
         self.partitioning = kwargs.get('partitioning', False)
         # self.color_mask = kwargs.get('color_mask', '')
         if self.partitioning == True:
-            self.color_mask = '110'
-            assert self.colors == pow(2,(self.color_mask.count('1')))
+            self.color_mask = '111'
+            assert self.colors == pow(2,(self.color_mask.count('1'))),\
+                'colors (%d) != %d'%(self.colors, pow(2,(self.color_mask.count('1'))))
         self.line_size = kwargs.get('line_size', 1)
         self.cache_capacity = kwargs.get('cache_capacity', 1)
         self.ways = kwargs.get('cache_ways', 1)
@@ -176,15 +177,14 @@ class PAS:
             d = 0
             while d < task.get_data_size():
                 for c in colors:
-                    if d >= task.get_data_size():
-                        break
-                    # print('get free lists of color %d'%(c))
-                    addr = self.free_lists[c].pop(0)
-                    addr.set_id(task.get_id())
-                    addr.set_data_idx(d)
-                    d += 1
-                    # print(addr)
-                    frame.append(addr)   
+                    if d < task.get_data_size():                            
+                        # print('get free lists of color %d'%(c))
+                        addr = self.free_lists[c].pop(0)
+                        addr.set_id(task.get_id())
+                        addr.set_data_idx(d)
+                        d += 1
+                        # print(addr)
+                        frame.append(addr)   
 
         elif ipas:
             for addr in ipas:

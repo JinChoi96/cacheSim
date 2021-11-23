@@ -168,14 +168,23 @@ class PAS:
         frame = []
         if ipas == None:
             # get a frame for each task
-            color = task.get_color()
-            #print(len(self.free_lists[color]))
-            for d in range(task.get_data_size()):
-                addr = self.free_lists[color].pop(0)
-                addr.set_id(task.get_id())
-                addr.set_data_idx(d)
-                # print(addr)
-                frame.append(addr)
+            if self.partitioning == False:
+                colors = [0]
+            else:
+                colors = task.get_color_list()
+
+            d = 0
+            while d < task.get_data_size():
+                for c in colors:
+                    if d >= task.get_data_size():
+                        break
+                    # print('get free lists of color %d'%(c))
+                    addr = self.free_lists[c].pop(0)
+                    addr.set_id(task.get_id())
+                    addr.set_data_idx(d)
+                    d += 1
+                    # print(addr)
+                    frame.append(addr)   
 
         elif ipas:
             for addr in ipas:

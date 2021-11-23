@@ -32,7 +32,6 @@ def initialize_task(mm):
             "id"        : i,
             "cpu_core"  : i,
             "data_size" : param.data_size,
-            "color"     : param.color_of_task[i],
             "execution_pattern_type"   : param.execution_pattern_type[i],
             "ticks"     : param.ticks,
             "mm"        : mm,
@@ -41,7 +40,8 @@ def initialize_task(mm):
             "base"      : param.base,
             "interfere" : param.interfere,
             "seq_acc_ratio"  : param.seq_acc_ratio[i],
-            "translate_level" : param.translate_level
+            "translate_level" : param.translate_level,
+            "color_list" : param.color_list_of_task[i]
         }
         task_set.append(Task(**task_param))
         #print(task_set[i])

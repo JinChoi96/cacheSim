@@ -19,7 +19,7 @@ class Task:
         self.id = kwargs.get('id', -1)
         self.cpu_core = kwargs.get('cpu_core', -1)
         self.data_size = kwargs.get('data_size', -1) # as for now, data unit is a word (occupies an address line)
-        self.color = kwargs.get('color', -1)
+        self.color_list = kwargs.get('color_list', [])
 
         self.hit_time = kwargs.get('hit_time', 1)
         self.miss_penalty = kwargs.get('miss_penalty', 2)
@@ -94,11 +94,11 @@ class Task:
 
     def __str__(self):
         return "[Task] id : %-5s core: %-5s data size: %-5s color: %-5s vas: %-10s type: %s" \
-            % (self.id, self.cpu_core, self.data_size, self.color, self.vas, self.execution_pattern_type)
+            % (self.id, self.cpu_core, self.data_size, self.color_list, self.vas, self.execution_pattern_type)
     
     # getter and setter 
-    def get_color(self):
-        return self.color
+    def get_color_list(self):
+        return self.color_list
 
     def get_data_size(self):
         return self.data_size
@@ -111,7 +111,7 @@ class Task:
 
     def allocate_vas(self):
         self.vas = [Task.global_vas_offset, Task.global_vas_offset + self.data_size]
-        Task.global_vas.append([self.vas, self.color]) # [start, end-1]
+        Task.global_vas.append([self.vas, self.color_list]) # [start, end-1]
         Task.global_vas_offset += self.data_size
         return
 
@@ -146,8 +146,8 @@ class Task:
             self.miss_other += 1
 
     def show_cache_count(self):
-        print("[Task %d (color %d)] hit: %d, miss: %d (cold : %d, inter task : %d, intra task: %d, other: %d)" \
-            % (self.id, self.color, self.hit, self.get_total_miss(), self.cold_miss, self.inter_task_miss, self.intra_task_miss, self.miss_other))
+        print("[Task %d (colors %s)] hit: %d, miss: %d (cold : %d, inter task : %d, intra task: %d, other: %d)" \
+            % (self.id, self.color_list, self.hit, self.get_total_miss(), self.cold_miss, self.inter_task_miss, self.intra_task_miss, self.miss_other))
 
     def read(self, idx):
         # change to reference value

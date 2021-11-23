@@ -2,7 +2,7 @@ from utils import *
 
 class Param:        
     def __init__(self):
-        self.iteration = 1000
+        self.iteration = 10
         self.ticks = 700
 
         # pas params
@@ -11,8 +11,8 @@ class Param:
         self.line_size = 4
         self.cache_capacity = 256
         self.cache_ways = 8
-        self.pa_capacity = 2048
-        self.translate_level = 1
+        self.pa_capacity = 4096 # enough space than data size 
+        self.translate_level = 2 if self.partitioning else 1
         self.stage_2_translate_offset = 2 if self.translate_level == 2 else 0
 
         # task params
@@ -25,7 +25,7 @@ class Param:
         self.data_size = 128 #16
         self.execution_pattern_type  = ['b','i', 'i', 'i']   # b : base, i : interfere 
         self.seq_acc_ratio = [0.9, 0.9, 0.9, 0.9]             # 1 : sequential, 0 : random 
-        self.color_of_task = [0, 1, 2, 3]
+        self.color_list_of_task = [[0,1,2],[3],[3],[3]] if self.partitioning else [[0],[0],[0],[0]]
 
         # parameter list
         self.param_str = ["ticks", "execution pattern type", "access pattern", "partitioning","translate level", "translate offset","colors", "lines size", \
@@ -71,11 +71,8 @@ class Param:
 
         if self.partitioning is True:
             assert self.colors > 1 
-        else:
-            for i in range(len(self.color_of_task)):
-                self.color_of_task[i] = 0
-        assert max(self.color_of_task) < self.colors
-        assert len(self.execution_pattern_type) == len(self.color_of_task) == len(self.seq_acc_ratio)
+
+        assert len(self.execution_pattern_type) == len(self.color_list_of_task) == len(self.seq_acc_ratio)
         assert (self.cache_capacity / (self.line_size * self.cache_ways)) / self.colors >= 1\
             , 'cache capacity should be larger than %d'%(self.line_size * self.cache_ways * self.colors)
 

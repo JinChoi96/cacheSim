@@ -2,17 +2,17 @@ from utils import *
 
 class Param:        
     def __init__(self):
-        self.iteration = 1
+        self.iteration = 1000
         self.ticks = 700
 
         # pas params
-        self.partitioning = True    # when False, colors is set to 1
+        self.partitioning = False    # when False, colors is set to 1
         self.colors = 4 if self.partitioning else 1
         self.line_size = 4
         self.cache_capacity = 256
         self.cache_ways = 8
         self.pa_capacity = 2048
-        self.translate_level = 2
+        self.translate_level = 1
         self.stage_2_translate_offset = 2 if self.translate_level == 2 else 0
 
         # task params
@@ -39,7 +39,8 @@ class Param:
             "line_size" : self.line_size,
             "cache_capacity" : self.cache_capacity,
             "cache_ways" : self.cache_ways,
-            "pa_capacity" : self.pa_capacity
+            "pa_capacity" : self.pa_capacity,
+            "partitioning" : self.partitioning
         }
 
         self.stage_2_page_table = {
@@ -50,7 +51,8 @@ class Param:
             "cache_capacity" : self.cache_capacity,
             "cache_ways" : self.cache_ways,
             "pa_capacity" : self.pa_capacity, # assume IPAS == PAS,
-            "stage_2_translate_offset" : self.stage_2_translate_offset
+            "stage_2_translate_offset" : self.stage_2_translate_offset,
+            "partitioning" : self.partitioning
         }
 
         self.cache_param = {

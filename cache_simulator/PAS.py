@@ -9,9 +9,11 @@ class PAS:
         self.name = kwargs.get('name', '')
         self.type = kwargs.get('type', '')
         self.colors = kwargs.get('colors', 1)
+        self.partitioning = kwargs.get('partitioning', False)
         # self.color_mask = kwargs.get('color_mask', '')
-        self.color_mask = '110'
-        assert self.colors == pow(2,(self.color_mask.count('1')))
+        if self.partitioning == True:
+            self.color_mask = '110'
+            assert self.colors == pow(2,(self.color_mask.count('1')))
         self.line_size = kwargs.get('line_size', 1)
         self.cache_capacity = kwargs.get('cache_capacity', 1)
         self.ways = kwargs.get('cache_ways', 1)
@@ -22,8 +24,9 @@ class PAS:
         assert self.stage_2_translate_offset < self.pa_capacity
         self.ipa_lines = int(self.pa_capacity / self.line_size)
 
-        assert self.cache_sets == pow(2, len(self.color_mask)),\
-            'cache sets %d should be the same with 2^%d'%(self.cache_sets, len(self.color_mask))
+        if self.partitioning == True:
+            assert self.cache_sets == pow(2, len(self.color_mask)),\
+                'cache sets %d should be the same with 2^%d'%(self.cache_sets, len(self.color_mask))
 
         self.sets_per_color = int(self.cache_sets / self.colors)
         if type == 'page table':
@@ -33,7 +36,8 @@ class PAS:
 
         self.free_lists = []
 
-        self.set_to_color = self._set_to_color()
+        if self.partitioning == True:
+            self.set_to_color = self._set_to_color()
 
 
 #        print('[PAS %s] cache sets : %d, ipa lines: %d, sets per color : %d, size per color: %d' %
@@ -90,7 +94,10 @@ class PAS:
             while data_idx < (self.ipa_lines * self.line_size) -1:
                 data_idx += 1
                 set = lists[data_idx].get_set_idx()
-                color = self.set_to_color[set]
+                if self.partitioning == True:
+                    color = self.set_to_color[set]
+                else:
+                    color = 0
                 lists[data_idx].set_color(color)
 
             if self.name == "IPA":

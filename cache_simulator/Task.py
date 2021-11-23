@@ -67,18 +67,29 @@ class Task:
         print(dash + dash)
         return
 
+    def get_colors_of_task(self, pas):
+        _colors = []
+        for i in range(100):
+            _colors.append(0)
+            for s in range(len(pas)):
+                if pas[s].color == i:
+                    _colors[i] += 1
+        return [i for i, e in enumerate(_colors) if e != 0]
+
     def show_pas(self):
         if self.translate_level == 1:
-            print(dash + "IPA of Task %d" %(self.id) + dash)
-            for i in range(len(self.ipas)):
-                print("[VA] : %d "%(self.vas[0]+i) + " => [IPA] " + str(self.ipas[i]))
-            print(dash + dash)
+            print("task %d's color: %s"%(self.id, self.get_colors_of_task(self.ipas)))
+            # print(dash + "IPA of Task %d" %(self.id) + dash)
+            # for i in range(len(self.ipas)):
+            #     print("[VA] : %d "%(self.vas[0]+i) + " => [IPA] " + str(self.ipas[i]))
+            # print(dash + dash)
         elif self.translate_level == 2:
-            print(dash + "PA of Task %d" %(self.id) + dash)
-            for i in range(len(self.pas)):
-                print("  [IPA] : %s "%(self.ipas[i]))
-                print("=> [PA] : " + str(self.pas[i]))
-            print(dash + dash)
+            print("task %d's color: %s"%(self.id, self.get_colors_of_task(self.pas)))
+            # print(dash + "PA of Task %d" %(self.id) + dash)
+            # for i in range(len(self.pas)):
+            #     print("  [IPA] : %s "%(self.ipas[i]))
+            #     print("=> [PA] : " + str(self.pas[i]))
+            # print(dash + dash)
 
 
     def __str__(self):

@@ -6,7 +6,7 @@ class Param:
         self.ticks = 700
 
         # pas params
-        self.partitioning = False    # when False, colors is set to 1
+        self.partitioning = True    # when False, colors is set to 1
         self.colors = 4 if self.partitioning else 1
         self.line_size = 4
         self.cache_capacity = 256

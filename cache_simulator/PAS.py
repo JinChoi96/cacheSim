@@ -181,7 +181,7 @@ class PAS:
             for addr in ipas:
                 set = addr.get_set_idx()
                 # add offset
-                new_set = (set + self.stage_2_translate_offset) % self.cache_sets
+                #new_set = (set + self.stage_2_translate_offset) % self.cache_sets
                 # random set
                 new_set = randint(0, self.cache_sets-1)
 

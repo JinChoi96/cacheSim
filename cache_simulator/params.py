@@ -5,6 +5,7 @@ class Param:
         seq_acc_ratio = [0.9, 0.9, 0.9, 0.9],
         color_list = [[0,1,2,3,4,5,6], [7], [7], [7]],
         colors = 8,
+        color_mask = '111',
         line_size = 4,
         cache_capacity = 256,
         cache_ways = 8,
@@ -19,6 +20,7 @@ class Param:
         self.sole = sole
         self.partitioning = partitioning if self.sole is False else False   # when False, colors is set to 1
         self.colors = colors if self.partitioning else 1
+        self.color_mask = color_mask
         self.line_size = line_size
         self.cache_capacity = cache_capacity
         self.cache_ways = cache_ways
@@ -56,6 +58,7 @@ class Param:
             "name" : "IPA",
             "type" : 'page table',
             "colors" : self.colors,
+            "color_mask" : self.color_mask,
             "line_size" : self.line_size,
             "cache_capacity" : self.cache_capacity,
             "cache_ways" : self.cache_ways,
@@ -67,6 +70,7 @@ class Param:
             "name" : "PA",
             "type" : "page table",
             "colors" : self.colors,
+            "color_mask" : self.color_mask,
             "line_size" : self.line_size,
             "cache_capacity" : self.cache_capacity,
             "cache_ways" : self.cache_ways,

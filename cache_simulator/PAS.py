@@ -12,7 +12,7 @@ class PAS:
         self.partitioning = kwargs.get('partitioning', False)
         # self.color_mask = kwargs.get('color_mask', '')
         if self.partitioning == True:
-            self.color_mask = '111'
+            self.color_mask = kwargs.get('color_mask', '')
             assert self.colors == pow(2,(self.color_mask.count('1'))),\
                 'colors (%d) != %d'%(self.colors, pow(2,(self.color_mask.count('1'))))
         self.line_size = kwargs.get('line_size', 1)

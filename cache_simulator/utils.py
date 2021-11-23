@@ -1,3 +1,5 @@
+from random import randint
+
 dash = "================="
 
 def show_params(strs, params):

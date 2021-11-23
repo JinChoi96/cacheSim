@@ -180,7 +180,11 @@ class PAS:
         elif ipas:
             for addr in ipas:
                 set = addr.get_set_idx()
+                # add offset
                 new_set = (set + self.stage_2_translate_offset) % self.cache_sets
+                # random set
+                new_set = randint(0, self.cache_sets-1)
+
                 color = self.set_to_color[new_set]
                 new_addr = Addr(addr.get_task_id(), color, new_set, addr.get_line_idx(), addr.get_data_idx())
                 frame.append(new_addr)

@@ -1,4 +1,3 @@
-from random import randint
 from utils import *
 
 class Task:
